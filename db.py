@@ -73,7 +73,39 @@ def delete_wallet(address):
     conn.commit()
     conn.close()
 
+# Wont be used directly, just to make it more modular
+def insert_wallet(address, tokens_seen=[], score=0.0, notes=""):
+    now = datetime.utcnow().isoformat()
+    conn, cursor = connect_db()
+    cursor.execute("""
+        INSERT INTO wallets (wallet_address, tokens_seen, last_active, score, notes)
+        VALUES (?, ?, ?, ?, ?)
+    """, (address, json.dumps(tokens_seen), now, score, notes))
+    conn.commit()
+    conn.close()
+
+def add_or_update_wallet(address, token, notes=""):
+    tokens = fetch_wallet_tokens(address)
+    now = datetime.utcnow().isoformat()
+
+    if tokens:
+        token_list = json.load(tokens)
+        if token not in token_list:
+            token_list.append(token)
+            conn, cursor = connect_db()
+            cursor.execute("""
+                UPDATE wallets
+                SET tokens_seen = ?, last_active = ?, notes = ?
+                WHERE wallet_address = ?
+            """, (json.dumps(token_list), now, notes, address))
+            conn.commit()
+            conn.close()
+    else:
+        insert_wallet(address, [token], notes=notes)
+
+
 if __name__ == "__main__":
     print(fetch_wallet_tokens("your_wallet_address_here"))
+    # placeholder as db is not populated yet.
 
 
