@@ -1,6 +1,13 @@
 import sqlite3
 import json
 from datetime import datetime
+import logging
+
+""" logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+) """
+
 
 DB_PATH = "omni.db"
 
@@ -21,7 +28,7 @@ def fetch_wallet_all_info(address):
     if row:
         return row
     else:
-        print("No wallet found")
+        logging.warning("Wallet not found")
         return
 
 def fetch_wallet_tokens(address):
@@ -30,7 +37,7 @@ def fetch_wallet_tokens(address):
         tokens = wallet["tokens_seen"]
         return tokens
     else:
-        print("Row does not exist, wallet not found")
+        logging.warning("Wallet not found")
         return
 
 def fetch_wallet_last_active(address):
@@ -39,7 +46,7 @@ def fetch_wallet_last_active(address):
         last_active = wallet["last_active"]
         return last_active
     else:
-        print("Row does not exist, wallet not found")
+        logging.warning("Wallet not found")("Row does not exist, wallet not found")
         return
 
 def fetch_wallet_score(address):
@@ -48,7 +55,7 @@ def fetch_wallet_score(address):
         score = wallet["score"]
         return score
     else:
-        print("Row does not exist, wallet not found")
+        logging.warning("Wallet not found")("Row does not exist, wallet not found")
         return
         
 def fetch_wallet_notes(address):
@@ -57,7 +64,7 @@ def fetch_wallet_notes(address):
         notes = wallet["notes"]
         return notes
     else:
-        print("Row does not exist, wallet not found")
+        logging.warning("Wallet not found")("Row does not exist, wallet not found")
         return
 
 def list_all_wallets():
@@ -89,7 +96,7 @@ def add_or_update_wallet(address, token, notes=""):
     now = datetime.utcnow().isoformat()
 
     if tokens:
-        token_list = json.load(tokens)
+        token_list = json.loads(tokens)
         if token not in token_list:
             token_list.append(token)
             conn, cursor = connect_db()
@@ -98,10 +105,53 @@ def add_or_update_wallet(address, token, notes=""):
                 SET tokens_seen = ?, last_active = ?, notes = ?
                 WHERE wallet_address = ?
             """, (json.dumps(token_list), now, notes, address))
+            logging.info(f"Updated wallet: {address} | token added: {token}")
             conn.commit()
             conn.close()
     else:
         insert_wallet(address, [token], notes=notes)
+
+def update_wallet_score(address, new_score):
+    now = datetime.utcnow().isoformat()
+    conn, cursor = connect_db()
+    cursor.execute("""
+        UPDATE wallets
+        SET score = ?, last_active = ?
+        WHERE wallet_address = ?
+    """, (new_score, now, address))
+    conn.commit()
+    conn.close()
+
+def update_wallet_notes(address, notes):
+    now = datetime.utcnow().isoformat()
+    conn, cursor = connect_db()
+    cursor.execute("""
+        UPDATE wallets
+        SET notes = ?, last_active = ?
+        WHERE wallet_address = ?
+    """, (notes, now, address))
+    conn.commit()
+    conn.close()
+
+def get_all_wallets_with_token(token):
+    conn, cursor = connect_db()
+    cursor.execute("SELECT wallet_address, tokens_seen FROM wallets")
+    rows = cursor.fetchall()
+    conn.close()
+
+    result = []
+    for row in rows:
+        tokens = json.loads(row["tokens_seen"])
+        if token in tokens:
+            result.append(row["wallet_address"])
+    return result
+
+def export_all_wallets():
+    conn, cursor = connect_db()
+    cursor.execute("SELECT * FROM wallets")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 
 if __name__ == "__main__":
