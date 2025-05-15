@@ -85,9 +85,9 @@ def insert_wallet(address, tokens_seen=[], score=0.0, notes=""):
     now = datetime.utcnow().isoformat()
     conn, cursor = connect_db()
     cursor.execute("""
-        INSERT INTO wallets (wallet_address, tokens_seen, last_active, score, notes)
+        INSERT INTO wallets (wallet_address, tokens_seen, score, notes)
         VALUES (?, ?, ?, ?, ?)
-    """, (address, json.dumps(tokens_seen), now, score, notes))
+    """, (address, json.dumps(tokens_seen), score, notes))
     conn.commit()
     conn.close()
 
@@ -102,9 +102,9 @@ def add_or_update_wallet(address, token, notes=""):
             conn, cursor = connect_db()
             cursor.execute("""
                 UPDATE wallets
-                SET tokens_seen = ?, last_active = ?, notes = ?
+                SET tokens_seen = ?, notes = ?
                 WHERE wallet_address = ?
-            """, (json.dumps(token_list), now, notes, address))
+            """, (json.dumps(token_list), notes, address))
             logging.info(f"Updated wallet: {address} | token added: {token}")
             conn.commit()
             conn.close()
@@ -116,9 +116,9 @@ def update_wallet_score(address, new_score):
     conn, cursor = connect_db()
     cursor.execute("""
         UPDATE wallets
-        SET score = ?, last_active = ?
+        SET score = ?
         WHERE wallet_address = ?
-    """, (new_score, now, address))
+    """, (new_score, address))
     conn.commit()
     conn.close()
 
@@ -127,7 +127,7 @@ def update_wallet_notes(address, notes):
     conn, cursor = connect_db()
     cursor.execute("""
         UPDATE wallets
-        SET notes = ?, last_active = ?
+        SET notes = ?
         WHERE wallet_address = ?
     """, (notes, now, address))
     conn.commit()

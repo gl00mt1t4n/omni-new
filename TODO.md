@@ -2,7 +2,22 @@
 
 - make database: DONE
 - database access/lookup functions: DONE
-- API for wallet aggregation through token holders:
+- Scrape trending tokens: DONE
+- Get all token holders: DONE
+
+### Next:
+- combine scraping modules into final pipeline of part 1 of phase 1
+- Get trending tokens (about once a day, can be done manually for now...?)
+- get all holders of top 20 tokens
+- update in DB
+- filter through DB with some criteria, idk what it should be. Maybe top 500 wallets? Ordered according to number of tokens they appeared in?
+- Put filtered wallets through gmgn, bullx api to get PnL, winrate, etc.
+
+
+
+
+General todol list:
+- API for wallet aggregation through token holders: 
 - add holders to omni.db using db.py: 
 - Filter for wallets with multiple appearances:
 - Manually make a list of some smart wallets:

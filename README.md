@@ -22,6 +22,8 @@ Frameworks I will be using, subject to change. May or may not actually use all o
 SQLite3 for database management. May have to switch over to postgreSQL later when I wish to run it on a server, but to get things up and running sqlite is best.
 Bullx, gmgn, photon, solscan, dexscreener, defined.fi APIs will be reverse engineered.
 Helius, solscan.fm, moralis might be some other proper API frameworks that will be used.
+~~Playwright for browser scraping~~
+Switched to using cloudscraper to bypass cloudfare. I love cloudscraper, life saver.
 
 High level process overview:
 1. Scan through holders of top x tokens daily
