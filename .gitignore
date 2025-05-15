@@ -1,3 +1,5 @@
 db.py
 __pycache__/
 omni/
+.env
+
