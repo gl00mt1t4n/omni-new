@@ -1,4 +1,4 @@
-## Phase 1:
+# Phase 1:
 
 - make database: DONE
 - database access/lookup functions: DONE
