@@ -28,8 +28,8 @@ def fetch_wallet_all_info(address):
     if row:
         return row
     else:
-        logging.warning("Wallet not found")
-        return
+        # logging.warning("Wallet not found")
+        return None
 
 def fetch_wallet_tokens(address):
     wallet = fetch_wallet_all_info(address)
@@ -37,8 +37,8 @@ def fetch_wallet_tokens(address):
         tokens = wallet["tokens_seen"]
         return tokens
     else:
-        logging.warning("Wallet not found")
-        return
+        # logging.warning("Wallet not found")
+        return None
 
 def fetch_wallet_last_active(address):
     wallet = fetch_wallet_all_info(address)
@@ -86,7 +86,7 @@ def insert_wallet(address, tokens_seen=[], score=0.0, notes=""):
     conn, cursor = connect_db()
     cursor.execute("""
         INSERT INTO wallets (wallet_address, tokens_seen, score, notes)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?)
     """, (address, json.dumps(tokens_seen), score, notes))
     conn.commit()
     conn.close()
@@ -110,6 +110,7 @@ def add_or_update_wallet(address, token, notes=""):
             conn.close()
     else:
         insert_wallet(address, [token], notes=notes)
+        print(f"Inserted new wallet: {address} | token: {token}")
 
 def update_wallet_score(address, new_score):
     now = datetime.utcnow().isoformat()

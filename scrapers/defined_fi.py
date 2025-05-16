@@ -80,8 +80,24 @@ def get_trending_tokens_from_defined(limit=20):
         print(response.text if 'response' in locals() else '')
         return []
 
+def get_trending_token_info(): # address and symbol only
+    tokens = get_trending_tokens_from_defined()
+    contract_info_list = [
+        {
+            "address": token["token"].get("address"),
+            "symbol": token["token"].get("symbol", "UNKNOWN")
+        }
+        for token in tokens
+        if token.get("token") and token["token"].get("address")
+    ]
+
+    print(f"Fetched {len(contract_info_list)} trending tokens with address and symbol.")
+    return contract_info_list
+
+
+
 if __name__ == "__main__":
-    print("📊 Top Trending Tokens on Defined.fi:\n")
+    print("Top Trending Tokens on Defined.fi:\n")
     tokens = get_trending_tokens_from_defined(limit=20)
 
     for token in tokens:
