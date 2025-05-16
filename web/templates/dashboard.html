@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Omni Wallet Dashboard</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #eee; }
+    tr:nth-child(even) { background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <h1>🧠 Omni Wallet Tracker</h1>
+  <p>Total wallets: {{ wallets | length }}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Wallet Address</th>
+        <th>Token Symbols</th>
+        <th>Token Addresses</th>
+        <th>Score</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for w in wallets %}
+      <tr>
+        <td>{{ w.wallet_address }}</td>
+        <td>{{ w.token_symbols_seen | join(', ') }}</td>
+        <td>{{ w.token_addresses_seen | join(', ') }}</td>
+        <td>{{ "%.2f" | format(w.score) }}</td>
+        <td>{{ w.notes or "" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
