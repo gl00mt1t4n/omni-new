@@ -192,6 +192,21 @@ def export_all_wallets():
         })
     return result
 
+def get_wallets_sorted_by_token_count(top_percent=10):
+    conn, cursor = connect_db()
+    cursor.execute("SELECT wallet_address, token_addresses_seen FROM wallets")
+    rows = cursor.fetchall()
+    conn.close()
+
+    wallet_token_counts = [
+        (row["wallet_address"], len(json.loads(row["token_addresses_seen"] or "[]")))
+        for row in rows
+    ]
+
+    sorted_wallets = sorted(wallet_token_counts, key=lambda x: x[1], reverse=True)
+
+    top_n = max(1, int(len(sorted_wallets) * (top_percent / 100)))
+    return sorted_wallets[:top_n]
 
 
 if __name__ == "__main__":
