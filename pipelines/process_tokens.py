@@ -8,6 +8,7 @@ from scrapers.defined_fi import get_trending_token_info
 from scrapers.helius_utils import get_token_accounts_rpc
 from data.raw_data import add_or_update_wallet, get_all_seen_token_addresses
 from data.raw_data import add_or_update_wallet
+from scrapers.bullx import fetch_pnl_stats  
 
 
 def process_token(contract: dict): 

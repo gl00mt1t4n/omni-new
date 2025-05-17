@@ -3,7 +3,7 @@ import json
 import requests
 import time
 
-def fetch_pnl_stats(wallet, retries=3, delay=1):
+def fetch_pnl_stats(wallet, retries=3, delay=1, proxy=None):
     url = "https://api-neo.bullx.io/v2/api/getPortfolioV3"
 
     headers = {
@@ -40,15 +40,20 @@ def fetch_pnl_stats(wallet, retries=3, delay=1):
 
     for attempt in range(1, retries + 1):
         try:
-            response = scraper.post(url, headers=headers, cookies=cookies, json=payload, timeout=20)
-            response.raise_for_status()
-            return response.json().get("pnlStats", {})
-        except (requests.exceptions.RequestException, requests.exceptions.Timeout) as e:
-            print(f"⚠️ Retry {attempt}/{retries} for {wallet} — {e}")
-            time.sleep(delay * attempt)  # linear backoff
-        except Exception as e:
-            print(f"❌ Unhandled error for {wallet}: {e}")
-            return {}
+            r = scraper.post(
+                url,
+                headers=headers,
+                cookies=cookies,
+                json=payload,
+                timeout=20,
+            )
+            r.raise_for_status()
+            return r.json().get("pnlStats", {})
+
+        except requests.RequestException as err:
+            print(f"Retry {attempt}/{retries} for {wallet} — {err}")
+            time.sleep(backoff * attempt)
+
     print(f"❌ Skipped {wallet} after {retries} retries.")
     return {}
 
