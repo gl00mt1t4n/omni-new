@@ -98,7 +98,7 @@ def pretty_elapsed() -> str:
 
 def is_wallet_bad(stats: dict) -> bool:
     """
-    Return True when *all* activity metrics are below MIN_THRESHOLD.
+    Return True when *any* activity metrics are below MIN_THRESHOLD.
 
     Parameters
     ----------
@@ -118,9 +118,9 @@ def is_wallet_bad(stats: dict) -> bool:
     total_spent  = stats.get("totalSpentUsd",         0.0)
 
     return (
-        realized     < MIN_THRESHOLD and
-        unrealized   < MIN_THRESHOLD and
-        total_rev    < MIN_THRESHOLD and
+        realized     < MIN_THRESHOLD or
+        unrealized   < MIN_THRESHOLD or
+        total_rev    < MIN_THRESHOLD or
         total_spent  < MIN_THRESHOLD
     )
 
@@ -129,6 +129,10 @@ def is_wallet_bad(stats: dict) -> bool:
 # Worker thread
 # ────────────────────────────────────────────────────────────────────
 def worker() -> None:
+    """
+    Process wallets one by one, single‐shot fetch.  
+    On failure, log and move on; on success, prune if below threshold.
+    """
     global processed
 
     while True:
@@ -138,13 +142,21 @@ def worker() -> None:
 
         try:
             stats = fetch_pnl_stats(wallet)
-            if is_wallet_bad(stats):
-                with lock:
-                    delete_wallet(wallet)
-                    print(f"Removed wallet: {wallet}")
         except Exception as exc:
-            print(f"Error while processing {wallet}: {exc}")
+            print(f"Failed to fetch stats for {wallet}: {exc}. Moving on.")
+            # Progress update below still applies
+        else:
+            if stats:
+                if is_wallet_bad(stats):
+                    with lock:
+                        delete_wallet(wallet)
+                        print(f"Removed wallet: {wallet}")
+                else:
+                    print(f"Kept wallet:    {wallet}")
+            else:
+                print(f"No stats for {wallet}: keeping by default")
 
+        # Progress counter & display
         with lock:
             processed += 1
             if processed % PROGRESS_EVERY == 0 or processed == total_wallets:
@@ -155,6 +167,7 @@ def worker() -> None:
 
         time.sleep(DELAY_BETWEEN_CALLS)
         wallet_queue.task_done()
+
 
 
 # ────────────────────────────────────────────────────────────────────
