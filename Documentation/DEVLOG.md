@@ -12,3 +12,6 @@
 - added .env file for healthy, anti-hardcoding practice.
 - Less work today, had issues bypassing cloudfare anti-bot measures. Had to GPT, reddit, stackexchange lot of it. 
 - Ended up using cloudscraper to bypass defined.fi, couldn't bypass solscan so ditched it and switched to helius. 
+
+### 17 May 2025
+- Switched back to using my own 
