@@ -4,14 +4,13 @@
 - database access/lookup functions: DONE
 - Scrape trending tokens: DONE
 - Get all token holders: DONE
+- Profitable wallets (All stats (UPnL, RPnL, totalRev, totalSpent) should be > 1000): DONE
 
 ### Next:
 - combine scraping modules into final pipeline of part 1 of phase 1
-- Get trending tokens (about once a day, can be done manually for now...?)
-- get all holders of top 20 tokens
-- update in DB
 - filter through DB with some criteria, idk what it should be. Maybe top 500 wallets? Ordered according to number of tokens they appeared in?
 - Put filtered wallets through gmgn, bullx api to get PnL, winrate, etc.
+- Separate functions to MODIFY existing woi.db and better streamlining for NEW inserts in woi.db
 
 
 
