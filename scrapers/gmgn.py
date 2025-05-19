@@ -1,22 +1,18 @@
 import time
 import asyncio
 import cloudscraper
+from dotenv import load_dotenv
+import os
+import json
 
-# Initialize shared scraper
+load_dotenv()
+
+# Initialize scraper
 scraper = cloudscraper.create_scraper()
 
-HEADERS = {
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Encoding": "gzip, deflate, br, zstd",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Connection": "keep-alive",
-    "Referer": "https://gmgn.ai/",
-    "Sec-Fetch-Dest": "empty",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Site": "same-origin",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:134.0) Gecko/20100101 Firefox/134.0",
-    "Cache-Control": "no-cache",
-}
+# Load headers from .env
+GMGN_HEADERS = json.loads(os.getenv("GMGN_HEADERS_JSON", "{}"))
+HEADERS = GMGN_HEADERS
 
 def get_base_params():
     return {
@@ -30,7 +26,7 @@ def get_base_params():
         "fp_did": "3a81c4ac5b072160c4da0400dabab6da",
         "os": "web",
         "period": "7d",
-        "_": str(time.time()),  # ✅ hardcoded cache busting
+        "_": str(time.time()),  #IMPORTANT: cache busting
     }
 
 def _sync_fetch(endpoint_path: str, wallet: str) -> dict:
@@ -43,7 +39,7 @@ def _sync_fetch(endpoint_path: str, wallet: str) -> dict:
         response.raise_for_status()
         return response.json().get("data", {})
     except Exception as e:
-        print(f"❌ Error fetching {wallet}: {e}")
+        print(f"Error fetching {wallet}: {e}")
         return {}
 
 
@@ -91,9 +87,9 @@ if __name__ == "__main__":
     async def main():
         wallet = "9VxJw5ngvTfv3SkBZnfn2bMk8H29QXMgA6MfGtuHkZhx"
         risk = await get_gmgn_risk(wallet)
-        print("📊 RISK:", risk)
+        print("RISK:", risk)
         is_safe = await is_wallet_safe(wallet)
-        print(f"✅ Is wallet safe? {is_safe}")
+        print(f"Is wallet safe? {is_safe}")
 
 
     asyncio.run(main())

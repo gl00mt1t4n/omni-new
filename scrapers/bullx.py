@@ -4,6 +4,15 @@ import requests
 import time
 import httpx
 from typing import Dict, List, Optional, Union
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BULLX_HEADERS = json.loads(os.getenv("BULLX_HEADERS_JSON", "{}"))
+BULLX_COOKIES = json.loads(os.getenv("BULLX_COOKIES_JSON", "{}"))
+HEADERS = BULLX_HEADERS
+COOKIES = BULLX_COOKIES
 
 async def fetch_pnl_stats(wallet: str) -> Optional[Dict]:
     """
@@ -30,23 +39,6 @@ async def fetch_pnl_stats(wallet: str) -> Optional[Dict]:
             return resp.json().get("pnlStats", {})
         except Exception:
             return None
-HEADERS = {
-        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjU5MWYxNWRlZTg0OTUzNjZjOTgyZTA1MTMzYmNhOGYyNDg5ZWFjNzIiLCJ0eXAiOiJKV1QifQ.eyJsb2dpblZhbGlkVGlsbCI6IjIwMjUtMDgtMTJUMTc6Mjg6MDUuOTU3WiIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9ic2ctdjIiLCJhdWQiOiJic2ctdjIiLCJhdXRoX3RpbWUiOjE3NDcyNDM2ODcsInVzZXJfaWQiOiIweGZmOTEzODY4NDQ0OTc1MDQ4Y2I1ZjI0MDRlZGQwMzc3NmFjNzA0YmIiLCJzdWIiOiIweGZmOTEzODY4NDQ0OTc1MDQ4Y2I1ZjI0MDRlZGQwMzc3NmFjNzA0YmIiLCJpYXQiOjE3NDczOTgxOTcsImV4cCI6MTc0NzQwMTc5NywiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6e30sInNpZ25faW5fcHJvdmlkZXIiOiJjdXN0b20ifX0.zgJnG0Z8ufcxaUYBcpz-stV57lSgYdiDhm1j0kqDdUEA5EYC-suAOTttPvuKaTfkYBx47uSdETcgS-c2T0bWqLoEMuCYfMkQ0vQLcnUcvlFbhFv-fYzcqI5g6-RXtshvgKJfNokTv0sJ3lVVaRfofuwbH1CjiDUyqJ2JxtE8-MgoNriZduceAgcdulWM069kyEqbVuPl4N7RPSTlu28re2nf1B5D8vkxBZe8kOGU6oH_bm2dN_0gFJuX8gnYmnLUQqxHUKmiNzZeqXesxHj3B42uCFbDtPrHi9KzMvBhaTw0orYzA5UIafLsnI_4gToEREjMRZWQ_2GMUk0db3nr0w",
-        "x-cs-token": "Ji3XVbcEqURPut-CsB02o.a1a29087984f57992a9192ca81af88a13e7c685a1f89064bc06062eed359cc32",
-        "origin": "https://neo.bullx.io",
-        "referer": "https://neo.bullx.io/",
-        "content-type": "application/json",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-        "accept": "application/json, text/plain, */*"
-    }
-
-COOKIES = {
-        "bullx-session-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIweGZmOTEzODY4NDQ0OTc1MDQ4Y2I1ZjI0MDRlZGQwMzc3NmFjNzA0YmIiLCJzZXNzaW9uSWQiOiJKaTNYVmJjRXFVUlB1dC1Dc0IwMm8iLCJzdWJzY3JpcHRpb25QbGFuIjoiQkFTSUMiLCJoYXNoIjoiNmUzMGM5M2VjMGM4MmYxZjk4NzI4OTZjMjcyMzUyMTQyNzc3YjIyMTMzZDkwMzllZmEwZTllNzIwY2YxYzk5NiIsImlhdCI6MTc0NzI0MzY4NiwiZXhwIjoxNzU1MDE5Njg2fQ.NRW-qk8s9TLTjGYGeFigEq_54wgxnCnQHd_ibxZxWT4",
-        "bullx-visitor-id": "0xff913868444975048cb5f2404edd03776ac704bb.631b0b4d39ffd6c22e67cda1f29897d1ef1ea07f5dce57339f1ce5c22d965d9f",
-        "bullx-cs-token": "Ji3XVbcEqURPut-CsB02o.a1a29087984f57992a9192ca81af88a13e7c685a1f89064bc06062eed359cc32",
-        "bullx-nonce-id": "3f2WFOBn87HBbQzgshVUA8WL9J01KB-DoL6rvP24VjlmYbxNYlCXRoFkoT6vz2KG"
-    }
-
 
 if __name__ == "__main__":
     import asyncio
