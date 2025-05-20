@@ -14,8 +14,8 @@ scraper = cloudscraper.create_scraper()
 GMGN_HEADERS = json.loads(os.getenv("GMGN_HEADERS_JSON", "{}"))
 HEADERS = GMGN_HEADERS
 
-def get_base_params():
-    return {
+def get_base_params(**extra) -> dict:
+    p = {
         "device_id": "8847efa1-b816-4997-a22c-b88f17e9c532",
         "client_id": "gmgn_web_20250517-1212-af09a36",
         "from_app": "gmgn",
@@ -28,6 +28,8 @@ def get_base_params():
         "period": "7d",
         "_": str(time.time()),  #IMPORTANT: cache busting
     }
+    p.update(extra)
+    return p
 
 def _sync_fetch(endpoint_path: str, wallet: str) -> dict:
     """Synchronous call to GMGN API via cloudscraper."""
@@ -81,6 +83,13 @@ async def is_wallet_safe(wallet: str) -> bool:
 
     print(f"Wallet {wallet} failed phishing filter:", risk)
     return False
+
+async def get_big_wins(wallet: str, min_prof_usd: float=1000, min_roi: float=0.5, top_n: int=3) -> dict {
+    data = await fetch_gmgn_data("/api/v1/wallet_holdings/sol/{wallet}", wallet)
+
+    holdings = data.get("holdings", [])
+
+}
 
 # 🔹 Test one wallet
 if __name__ == "__main__":
