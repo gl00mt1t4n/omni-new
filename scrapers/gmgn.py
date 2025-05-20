@@ -36,9 +36,15 @@ async def fetch_gmgn_data(endpoint_path: str, wallet: str, params_override: dict
 
 
 async def get_gmgn_risk(wallet: str) -> dict:
-    """Fetches 'risk' flags (phishing behavior) from GMGN API."""
+    """
+    Return phishing-risk ratios.
+    If API gives no data → return empty dict so caller treats wallet as unsafe.
+    """
     data = await fetch_gmgn_data("/api/v1/wallet_stat/sol/{wallet}/7d", wallet)
-    risk = data.get("risk", {})
+
+    if not data:                       # network failure or non-json
+        return {}   
+    risk = data.get("risk") or {}      # ← protect against None
     return {
         "didnt_buy_ratio": float(risk.get("no_buy_hold_ratio", 0.0)),
         "buy_sell_under_5s_ratio": float(risk.get("fast_tx_ratio", 0.0)),
@@ -49,7 +55,7 @@ async def get_gmgn_risk(wallet: str) -> dict:
 async def is_wallet_safe(wallet: str) -> bool:
     """
     Returns true if it passes phishing checks.
-    didnt_buy_ratio < 10%
+    didnt_buy_ratio < 60%
     buy_sell_under_5s_ratio	< 40%
     sold_gt_bought_ratio	< 10%
     """
@@ -60,7 +66,7 @@ async def is_wallet_safe(wallet: str) -> bool:
         return False
     
     if (
-        risk["didnt_buy_ratio"] < 0.35 and
+        risk["didnt_buy_ratio"] < 0.6 and
         risk["buy_sell_under_5s_ratio"] < 0.40 and
         risk["sold_gt_bought_ratio"] < 0.10
     ):
@@ -93,24 +99,34 @@ async def get_wallet_holdings( # this is for in order of total profit, descendin
     )
     return data.get("holdings", [])
 
-# ─── KEEP **ONE** GOOD VERSION ONLY ────────────────────────────────────────────
+import random
+MAX_RETRIES = 3
+BACKOFF_BASE = 1.69        # seconds
+
 def _sync_fetch(endpoint_path: str,
                 wallet: str,
                 params_override: dict | None = None) -> dict:
-    """
-    Low-level synchronous call to GMGN API via cloudscraper.
-    """
     url    = f"https://gmgn.ai" + endpoint_path.format(wallet=wallet)
     params = params_override or get_base_params()
 
-    try:
-        resp = scraper.get(url, headers=HEADERS, params=params)
-        resp.raise_for_status()
-        return resp.json().get("data", {})
-    except Exception as e:
-        print(f"❌ Error fetching {wallet}: {e}")
-        return {}
-# ───────────────────────────────────────────────────────────────────────────────
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            resp = scraper.get(url, headers=HEADERS, params=params)
+            if resp.status_code == 429:
+                raise RuntimeError("rate-limit 429")
+            resp.raise_for_status()
+            # GMGN sometimes returns {"code":1 ...} on bad queries
+            payload = resp.json()
+            if payload.get("code", 0) != 0:
+                raise RuntimeError(f"gmgn code={payload.get('code')}")
+            time.sleep(0.07)  
+            return payload.get("data", {})
+        except Exception as e:
+            if attempt == MAX_RETRIES:
+                print(f"❌ [GMGN] {wallet} failed after {attempt} tries: {e}")
+                return {}
+            sleep_for = BACKOFF_BASE * (attempt**2) + random.random()
+            time.sleep(sleep_for)
 
 
 async def get_gmgn_big_wins(
