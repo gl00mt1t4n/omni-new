@@ -31,23 +31,8 @@ def get_base_params(**extra) -> dict:
     p.update(extra)
     return p
 
-def _sync_fetch(endpoint_path: str, wallet: str) -> dict:
-    """Synchronous call to GMGN API via cloudscraper."""
-    url = f"https://gmgn.ai" + endpoint_path.format(wallet=wallet)
-    params = get_base_params()
-
-    try:
-        response = scraper.get(url, headers=HEADERS, params=params)
-        response.raise_for_status()
-        return response.json().get("data", {})
-    except Exception as e:
-        print(f"Error fetching {wallet}: {e}")
-        return {}
-
-
-async def fetch_gmgn_data(endpoint_path: str, wallet: str) -> dict:
-    """Async-compatible wrapper using to_thread for sync cloudscraper."""
-    return await asyncio.to_thread(_sync_fetch, endpoint_path, wallet)
+async def fetch_gmgn_data(endpoint_path: str, wallet: str, params_override: dict | None = None) -> dict:
+    return await asyncio.to_thread(_sync_fetch, endpoint_path, wallet, params_override)
 
 
 async def get_gmgn_risk(wallet: str) -> dict:
@@ -84,12 +69,76 @@ async def is_wallet_safe(wallet: str) -> bool:
     print(f"Wallet {wallet} failed phishing filter:", risk)
     return False
 
-async def get_big_wins(wallet: str, min_prof_usd: float=1000, min_roi: float=0.5, top_n: int=3) -> dict {
-    data = await fetch_gmgn_data("/api/v1/wallet_holdings/sol/{wallet}", wallet)
+async def get_wallet_holdings( # this is for in order of total profit, descending
+    wallet: str,
+    limit: int = 50,
+    orderby: str = "total_profit",
+    direction: str = "desc"
+) -> list[dict]:
+    """
+    Returns the 'holdings' array already sorted by GMGN backend.
 
-    holdings = data.get("holdings", [])
+    Showsmall=True, sellout=True, tx30d=True replicate the UI query.
+    """
+    params = get_base_params(
+        limit=str(limit),
+        orderby=orderby,
+        direction=direction,
+        showsmall="true",
+        sellout="true",
+        tx30d="true"
+    )
+    data = await fetch_gmgn_data(
+        "/api/v1/wallet_holdings/sol/{wallet}", wallet, params_override=params
+    )
+    return data.get("holdings", [])
 
-}
+# ─── KEEP **ONE** GOOD VERSION ONLY ────────────────────────────────────────────
+def _sync_fetch(endpoint_path: str,
+                wallet: str,
+                params_override: dict | None = None) -> dict:
+    """
+    Low-level synchronous call to GMGN API via cloudscraper.
+    """
+    url    = f"https://gmgn.ai" + endpoint_path.format(wallet=wallet)
+    params = params_override or get_base_params()
+
+    try:
+        resp = scraper.get(url, headers=HEADERS, params=params)
+        resp.raise_for_status()
+        return resp.json().get("data", {})
+    except Exception as e:
+        print(f"❌ Error fetching {wallet}: {e}")
+        return {}
+# ───────────────────────────────────────────────────────────────────────────────
+
+
+async def get_gmgn_big_wins(
+    wallet: str,
+    min_profit_usd: float = 1_000,
+    min_roi: float = 1.0,
+    top_n: int = 3
+) -> dict:
+    """
+    Uses server-sorted /wallet_holdings so we only inspect the first `limit`.
+    """
+    holdings = await get_wallet_holdings(wallet, limit=50)
+
+    winners = [
+        {
+            "symbol": h["token"]["symbol"],
+            "profit_usd": float(h["total_profit"]),
+            "roi": float(h["total_profit_pnl"])
+        }
+        for h in holdings
+        if float(h.get("total_profit", 0)) >= min_profit_usd
+        and float(h.get("total_profit_pnl", 0)) >= min_roi
+    ]
+
+    return {
+        "has_big_wins": len(winners) >= top_n,
+        "winners": winners[:top_n]
+    }
 
 # 🔹 Test one wallet
 if __name__ == "__main__":
@@ -99,6 +148,12 @@ if __name__ == "__main__":
         print("RISK:", risk)
         is_safe = await is_wallet_safe(wallet)
         print(f"Is wallet safe? {is_safe}")
+
+    async def demo():
+        wallet = "3h65MmPZksoKKyEpEjnWU2Yk2iYT5oZDNitGy5cTaxoE"
+        res = await get_gmgn_big_wins(wallet)
+        print(res)
+    asyncio.run(demo())
 
 
     asyncio.run(main())

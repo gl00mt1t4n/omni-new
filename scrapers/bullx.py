@@ -40,6 +40,8 @@ async def fetch_pnl_stats(wallet: str) -> Optional[Dict]:
         except Exception:
             return None
 
+
+
 if __name__ == "__main__":
     import asyncio
     import json
