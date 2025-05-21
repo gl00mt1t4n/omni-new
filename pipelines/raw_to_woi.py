@@ -12,7 +12,7 @@ import sys
 # ────────────────────────────────────────────────────────────────────
 # Compute project root (one level up from pipelines/)
 # ────────────────────────────────────────────────────────────────────
-HERE = os.path.dirname(__file__)                     # .../your-project/pipelines
+HERE = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(os.path.join(HERE, os.pardir))
 sys.path.insert(0, PROJECT_ROOT)
 

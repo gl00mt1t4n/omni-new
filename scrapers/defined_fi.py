@@ -1,15 +1,12 @@
 import cloudscraper
 import json
 
+
 def get_trending_tokens_from_defined(limit=20):
     url = "https://www.defined.fi/api"
 
     scraper = cloudscraper.create_scraper(
-        browser={
-            "browser": "chrome",
-            "platform": "windows",
-            "mobile": False
-        }
+        browser={"browser": "chrome", "platform": "windows", "mobile": False}
     )
 
     query = """
@@ -53,21 +50,19 @@ def get_trending_tokens_from_defined(limit=20):
                 "network": [1399811149],
                 "trendingIgnored": False,
                 "creatorAddress": None,
-                "potentialScam": False
+                "potentialScam": False,
             },
             "statsType": "FILTERED",
-            "rankings": [
-                {"attribute": "trendingScore24", "direction": "DESC"}
-            ],
+            "rankings": [{"attribute": "trendingScore24", "direction": "DESC"}],
             "limit": limit,
-            "offset": 0
-        }
+            "offset": 0,
+        },
     }
 
     headers = {
         "Content-Type": "application/json",
         "Origin": "https://www.defined.fi",
-        "Referer": "https://www.defined.fi/"
+        "Referer": "https://www.defined.fi/",
     }
 
     try:
@@ -76,16 +71,17 @@ def get_trending_tokens_from_defined(limit=20):
         tokens = response.json()["data"]["filterTokens"]["results"]
         return tokens
     except Exception as e:
-        print(f"❌ Error: {e}")
-        print(response.text if 'response' in locals() else '')
+        print(f"[ERROR] Error: {e}")
+        print(response.text if "response" in locals() else "")
         return []
 
-def get_trending_token_info(): # address and symbol only
+
+def get_trending_token_info():  # address and symbol only
     tokens = get_trending_tokens_from_defined()
     contract_info_list = [
         {
             "address": token["token"].get("address"),
-            "symbol": token["token"].get("symbol", "UNKNOWN")
+            "symbol": token["token"].get("symbol", "UNKNOWN"),
         }
         for token in tokens
         if token.get("token") and token["token"].get("address")
@@ -93,7 +89,6 @@ def get_trending_token_info(): # address and symbol only
 
     print(f"Fetched {len(contract_info_list)} trending tokens with address and symbol.")
     return contract_info_list
-
 
 
 if __name__ == "__main__":
@@ -123,4 +118,3 @@ if __name__ == "__main__":
         print(f"  Twitter: {socials.get('twitter')}")
         print(f"  Telegram: {socials.get('telegram')}")
         print("-" * 50)
-

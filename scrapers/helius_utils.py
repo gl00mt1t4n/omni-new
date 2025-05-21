@@ -13,23 +13,18 @@ def get_token_accounts_rpc(
     mint_address: str,
     api_key: Optional[str] = None,
     limit: int = 1000,
-    delay: float = 0.2
+    delay: float = 0.2,
 ) -> List[Dict]:
     """
     Fetches all token holders (token accounts) from Helius RPC using pagination.
-
-    Args:
-        mint_address (str): The mint address of the token.
-        api_key (str, optional): Helius API key. Uses .env key if not provided.
-        limit (int): Number of results per page (max 1000).
-        delay (float): Delay between pages to avoid rate limits.
-
     Returns:
         List[Dict]: List of token account dicts (owner, amount, etc).
     """
     api_key = api_key or HELIUS_API_KEY
     if not api_key:
-        raise ValueError("Missing Helius API key. Set it in .env or pass it explicitly.")
+        raise ValueError(
+            "Missing Helius API key. Set it in .env or pass it explicitly."
+        )
 
     url = f"https://mainnet.helius-rpc.com/?api-key={api_key}"
     headers = {"Content-Type": "application/json"}
@@ -46,10 +41,8 @@ def get_token_accounts_rpc(
             "params": {
                 "mint": mint_address,
                 "limit": limit,
-                "options": {
-                    "showZeroBalance": False
-                }
-            }
+                "options": {"showZeroBalance": False},
+            },
         }
 
         if cursor:
@@ -77,6 +70,7 @@ def get_token_accounts_rpc(
     print(f"\nTotal holders for {mint_address}: {len(holders)}")
     return holders
 
+
 if __name__ == "__main__":
     token = "J27UYHX5oeaG1YbUGQc8BmJySXDjNWChdGB2Pi2TMDAq"
     holders = get_token_accounts_rpc(token)
@@ -84,4 +78,3 @@ if __name__ == "__main__":
     for h in holders[:5]:
         print(f"{h['owner']} — {h['amount']}")
         # Print top owners for testing sake
-

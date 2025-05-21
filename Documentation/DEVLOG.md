@@ -1,5 +1,8 @@
 ## KNOWN ISSUES
 - Minor: No function to effectively remove wallets or tokens from the list
+- Minor: woi_data.py has a function to filter 'active/good' wallets, which should have been in gmgn.py
+- Minor: woi_data.py also has the pipeline function, which should be written in a pipeline file (not just called in the pipeline file)
+
 
 ### 14-15 May 2025
 - Finished modular sqlite layer
@@ -13,5 +16,9 @@
 - Less work today, had issues bypassing cloudfare anti-bot measures. Had to GPT, reddit, stackexchange lot of it. 
 - Ended up using cloudscraper to bypass defined.fi, couldn't bypass solscan so ditched it and switched to helius. 
 
-### 17 May 2025
-- Switched back to using my own 
+### 18-21 May 2025
+- Added bullx api
+- Added gmgn api
+- added final smart money database
+- added final filtering
+- finished phase 1

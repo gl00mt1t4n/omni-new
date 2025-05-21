@@ -17,6 +17,10 @@ import time
 import argparse
 from pathlib import Path
 import sys, pathlib
+import threading
+from datetime import timedelta
+import random
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
 
@@ -29,13 +33,13 @@ from scrapers.gmgn import (
 
 # ─── file paths ───────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parents[1]
-WOI_DB   = ROOT / "data" / "woi.db"
+WOI_DB = ROOT / "data" / "woi.db"
 SMART_DB = ROOT / "data" / "smart.db"
 
 # ─── sqlite helpers ───────────────────────────────────────────────────────────
 def init_smart_db() -> sqlite3.Connection:
     conn = sqlite3.connect(SMART_DB)
-    cur  = conn.cursor()
+    cur = conn.cursor()
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS smart_wallets (
@@ -56,13 +60,14 @@ def init_smart_db() -> sqlite3.Connection:
 
 def load_all_wallets() -> list[str]:
     conn = sqlite3.connect(WOI_DB)
-    cur  = conn.cursor()
+    cur = conn.cursor()
     try:
         cur.execute("SELECT wallet FROM good_wallets")
         rows = cur.fetchall()
         return [r[0] for r in rows]
     finally:
         conn.close()
+
 
 # ─── per-wallet async processing ──────────────────────────────────────────────
 async def analyse_wallet(wallet: str):
@@ -109,9 +114,15 @@ def upsert_row(conn: sqlite3.Connection, row: dict):
             row["didnt_buy"],
             row["fast_tx"],
             row["sold_gt"],
-            w[0].get("symbol"), w[0].get("profit_usd"), w[0].get("roi"),
-            w[1].get("symbol"), w[1].get("profit_usd"), w[1].get("roi"),
-            w[2].get("symbol"), w[2].get("profit_usd"), w[2].get("roi"),
+            w[0].get("symbol"),
+            w[0].get("profit_usd"),
+            w[0].get("roi"),
+            w[1].get("symbol"),
+            w[1].get("profit_usd"),
+            w[1].get("roi"),
+            w[2].get("symbol"),
+            w[2].get("profit_usd"),
+            w[2].get("roi"),
             row["ts"],
         ),
     )
@@ -120,24 +131,39 @@ def upsert_row(conn: sqlite3.Connection, row: dict):
 # ─── main pipeline ────────────────────────────────────────────────────────────
 async def main(concurrency: int = 30):
     wallets = load_all_wallets()
-    print(f"🔎 Processing {len(wallets)} wallets from woi.db")
+    total = len(wallets)
+    print(f"[INFO] Starting analysis for {total} wallets from woi.db")
 
-    sem   = asyncio.Semaphore(concurrency)
-    conn  = init_smart_db()
+    sem = asyncio.Semaphore(concurrency)
+    conn = init_smart_db()
 
-    async def worker(w):
+    start_time = time.time()  # 👆 start-timestamp holder
+
+    async def worker(idx_wallet):
+        idx, w = idx_wallet
         async with sem:
             row = await analyse_wallet(w)
+            elapsed = time.time() - start_time
+            hhmmss = str(timedelta(seconds=int(elapsed)))
+
             if row:
                 upsert_row(conn, row)
-                print("✅", w)
+                print(
+                    f"[SUCCESS] [{idx+1}/{total}] Wallet {w} processed successfully | Elapsed: {hhmmss}"
+                )
             else:
-                print("❌", w)
+                print(
+                    f"[SKIP] [{idx+1}/{total}] Wallet {w} did not meet criteria | Elapsed: {hhmmss}"
+                )
 
-    await asyncio.gather(*(worker(w) for w in wallets))
+    # enumerate so each worker knows its sequence #
+    await asyncio.gather(*(worker(pair) for pair in enumerate(wallets)))
+
     conn.commit()
     conn.close()
-    print("✅ Finished. Results in data/smart.db")
+
+    runtime = str(timedelta(seconds=int(time.time() - start_time)))
+    print(f"[INFO] Pipeline completed in {runtime}. Output written to data/smart.db")
 
 
 if __name__ == "__main__":

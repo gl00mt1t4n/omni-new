@@ -6,6 +6,7 @@ import httpx
 from typing import Dict, List, Optional, Union
 import os
 from dotenv import load_dotenv
+import asyncio
 
 load_dotenv()
 
@@ -13,6 +14,7 @@ BULLX_HEADERS = json.loads(os.getenv("BULLX_HEADERS_JSON", "{}"))
 BULLX_COOKIES = json.loads(os.getenv("BULLX_COOKIES_JSON", "{}"))
 HEADERS = BULLX_HEADERS
 COOKIES = BULLX_COOKIES
+
 
 async def fetch_pnl_stats(wallet: str) -> Optional[Dict]:
     """
@@ -34,17 +36,16 @@ async def fetch_pnl_stats(wallet: str) -> Optional[Dict]:
 
     async with httpx.AsyncClient(timeout=20) as client:
         try:
-            resp = await client.post(url, headers=HEADERS, cookies=COOKIES, json=payload)
+            resp = await client.post(
+                url, headers=HEADERS, cookies=COOKIES, json=payload
+            )
             resp.raise_for_status()
             return resp.json().get("pnlStats", {})
         except Exception:
             return None
 
 
-
 if __name__ == "__main__":
-    import asyncio
-    import json
 
     test_wallet = "H1UsuH1T32cKbdWpnkuYg5DCFfSgxDj4WMLD9jAZPJuB"
 
