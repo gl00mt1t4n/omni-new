@@ -45,3 +45,17 @@ db.py will be the main database file. Its schema is so:
 wallet (primary key), tokens it appears in, last_active, note (special points to add after manual inspection)
 
 
+# PHASE 1 COMPLETE!! BETA SMART MONEY NOW IN SMART.DB
+
+## TO DO:
+- Rewrite code to get total amount of x token bought per wallet
+- Implement tags for smart, human, bot, whales, flippers, high frequency, active, inactive, previously active, etc.
+- Add timestamps on wallets which have been recently checked. If it has been checked less than a month ago, skip processing. If not, re-analyze.
+- Write code for wallet clusters. Total inflows + outflows in $$ worth between wallets. Calculate frequency of flows. Will have to figure out a way to account for general txns between two individuals, recurring payments, etc.
+- Write code to organize and manage wallet clusters under as instances of a cluster class
+- Further optimizations
+
+### Side project: work on code to find the most optimal settings to use a particular API.
+
+## All of the above will be implemented after the final MVP is delivered. This will involve setting up a basic wallet tracker which tracks real time transasctions of wallets in smart.db and gives a real time dashboard of all tokens which have been bought, how much amount, etc, etc. by smart money. After that I will work on these modules. After these are done, i will attempt to get some sort of funding, either by my own trading or external sources to get my hands on my own RPC Node. I will make use of these to make my own API which decodes transactions --> I can write my own logic for PnL, phishing checks, etc, etc.
+
